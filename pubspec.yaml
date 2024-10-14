@@ -10,10 +10,17 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  url_launcher: ^6.3.0  # Actualiza a la versión más reciente
-  http: ^1.2.2
-  cupertino_icons: ^1.0.6
-  permission_handler: ^10.0.0  # Asegúrate de tener esta dependencia para manejar permisos
+  url_launcher: ^6.3.0  # Ya existente
+  http: ^1.2.2  # Ya existente
+  cupertino_icons: ^1.0.6  # Ya existente
+  permission_handler: ^10.0.0  # Ya existente
+
+  # Nuevas dependencias que necesitas agregar
+  google_generative_ai: ^0.1.0   # Para Google Generative AI
+  flutter_tts: ^3.5.0            # Para Text-To-Speech (TTS)
+  intl: ^0.18.0                  # Para formateo de fechas
+  connectivity_plus: ^3.0.3       # Para la conectividad de la red
+  shared_preferences: ^2.1.1      # Para almacenamiento local
 
 dev_dependencies:
   flutter_test:

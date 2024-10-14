@@ -54,9 +54,9 @@ class Reto1Screen extends StatelessWidget {
         children: [
           _buildContactItem(
             context,
-            'Carlos Enrique Barriga Aguilar', // Nombre del alumno
-            '221188',                  // Matrícula del alumno
-            '9612112625',               // Teléfono del alumno
+            'Velasco Jimenez Veronica', // Nombre del alumno
+            '221224',                  // Matrícula del alumno
+            '9614427531',               // Teléfono del alumno
             'https://github.com/CARLOS-ENRIQUE-BA/Challenge-Application',  // URL del repositorio de GitHub
           ),
         ],
