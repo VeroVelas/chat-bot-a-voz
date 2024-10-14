@@ -57,7 +57,7 @@ class Reto1Screen extends StatelessWidget {
             'Velasco Jimenez Veronica', // Nombre del alumno
             '221224',                  // Matrícula del alumno
             '9614427531',               // Teléfono del alumno
-            'https://github.com/CARLOS-ENRIQUE-BA/Challenge-Application',  // URL del repositorio de GitHub
+            'https://github.com/VeroVelas/Act3-chatbot.git',  // URL del repositorio de GitHub
           ),
         ],
       ),
