@@ -1,38 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart'; // Biblioteca para manejar URLs
+import 'package:url_launcher/url_launcher.dart';
 
 class Reto1Screen extends StatelessWidget {
-  // Método para enviar un mensaje de texto a un número específico.
-  void _sendMessage(String number) async {
-    final Uri smsUri = Uri(
-      scheme: 'sms',
-      path: number,
-    );
-    if (await canLaunchUrl(smsUri)) {
-      await launchUrl(smsUri);
+  // Función para abrir el enlace del repositorio en el navegador
+  void _launchURL() async {
+    final Uri url = Uri.parse('https://github.com/VeroVelas/chat-bot-a-voz.gitt'); // Cambia este URL por el de tu repositorio
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
-      throw 'No se pudo enviar el mensaje a $number';
-    }
-  }
-
-  void _makeCall(String number) async {
-    final Uri telUri = Uri(
-      scheme: 'tel',
-      path: number,
-    );
-    if (await canLaunchUrl(telUri)) {
-      await launchUrl(telUri);
-    } else {
-      throw 'No se pudo realizar la llamada a $number';
-    }
-  }
-
-  void _openRepository(String url) async {
-    final Uri repoUri = Uri.parse(url);
-    if (await canLaunchUrl(repoUri)) {
-      await launchUrl(repoUri);
-    } else {
-      throw 'No se pudo abrir el repositorio en $url';
+      throw 'No se pudo abrir el enlace $url';
     }
   }
 
@@ -40,69 +16,86 @@ class Reto1Screen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reto 1 - Contacto'),
-        backgroundColor: Colors.blue,
-        elevation: 10,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(20),
+        title: const Text('Información del Alumno'),
+        backgroundColor: Colors.redAccent,
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              // Logo en el centro
+              Center(
+                child: CircleAvatar(
+                  backgroundImage: AssetImage('assets/images/logo.jpg'), // Asegúrate de tener esta imagen en la ruta indicada
+                  radius: 80, // Tamaño del logo
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Información del alumno
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'Verónica Velasco Jiménez',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'Matrícula: 221224',
+                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'Carrera: Ingeniería en Software',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'Materia: Programación Móvil',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'Grupo: A',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Botón para abrir el repositorio
+              ElevatedButton.icon(
+                onPressed: _launchURL,
+                icon: const Icon(Icons.link),
+                label: const Text('Abrir Repositorio'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue, // Color del botón
+                  foregroundColor: Colors.white, // Color del texto y el ícono
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          _buildContactItem(
-            context,
-            'Velasco Jimenez Veronica', // Nombre del alumno
-            '221224',                  // Matrícula del alumno
-            '9614427531',               // Teléfono del alumno
-            'https://github.com/VeroVelas/Act3-chatbot.git',  // URL del repositorio de GitHub
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContactItem(
-      BuildContext context, String name, String id, String phone, String repoUrl) {
-    return Card(
-      child: Column(
-        children: [
-          // Nombre y matrícula del alumno
-          ListTile(
-            title: Text(name),
-            subtitle: Text('Matrícula: $id'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.message),
-                  onPressed: () => _sendMessage(phone),
-                  tooltip: 'Enviar mensaje',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.call),
-                  onPressed: () => _makeCall(phone),
-                  tooltip: 'Llamar',
-                ),
-              ],
-            ),
-          ),
-          // Botón para abrir el repositorio
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: ElevatedButton.icon(
-              onPressed: () => _openRepository(repoUrl),
-              icon: const Icon(Icons.link),
-              label: const Text('Ver repositorio'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,  // Color del botón
-                foregroundColor: Colors.white,  // Color del texto y los iconos
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

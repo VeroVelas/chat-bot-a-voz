@@ -6,8 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
-const String apiKey = "AIzaSyC8k6REIl0KhGzggzwRX4TXVBJjOfvGbmk";   // Reemplaza con tu API key
+const String apiKey = "AIzaSyC8k6REIl0KhGzggzwRX4TXVBJjOfvGbmk"; // Reemplaza con tu API key
 
 class ChatBotView extends StatefulWidget {
   @override
@@ -21,15 +22,17 @@ class _ChatBotViewState extends State<ChatBotView> {
   late final GenerativeModel _model;
   late final ChatSession _chatSession;
   late StreamSubscription _connectivitySubscription;
+  late stt.SpeechToText _speech;
   bool _isConnected = true;
-  bool _hasShownNoConnectionMessage = false;
-  bool _hasShownReconnectedMessage = false;
+  bool _isListening = false;
+  bool _isBotResponding = false;
   String _selectedLanguage = "en-US";
 
   @override
   void initState() {
     super.initState();
     _flutterTts = FlutterTts();
+    _speech = stt.SpeechToText();
     _model = GenerativeModel(model: 'gemini-pro', apiKey: apiKey);
     _chatSession = _model.startChat();
     checkInternetConnection();
@@ -55,21 +58,17 @@ class _ChatBotViewState extends State<ChatBotView> {
       _isConnected = connected;
     });
 
-    if (!_isConnected && !_hasShownNoConnectionMessage) {
+    if (!_isConnected) {
       setState(() {
         _messages.add(ChatMessage(
             text: "No hay conexión a Internet. Conéctate a una red para enviar mensajes.",
             isUser: false));
-        _hasShownNoConnectionMessage = true;
-        _hasShownReconnectedMessage = false;
       });
-    } else if (_isConnected && !_hasShownReconnectedMessage) {
+    } else {
       setState(() {
         _messages.add(ChatMessage(
             text: "Conexión a Internet restaurada. Ya puedes enviar mensajes.",
             isUser: false));
-        _hasShownReconnectedMessage = true;
-        _hasShownNoConnectionMessage = false;
       });
     }
   }
@@ -89,32 +88,50 @@ class _ChatBotViewState extends State<ChatBotView> {
     if (_controller.text.isNotEmpty) {
       setState(() {
         _messages.add(ChatMessage(text: _controller.text, isUser: true));
+        _isBotResponding = true;
       });
       String userMessage = _controller.text;
       _controller.clear();
-
-      setState(() {
-        _messages.add(ChatMessage(text: "Analizando...", isUser: false));
-      });
 
       try {
         final response = await _chatSession.sendMessage(Content.text(userMessage));
         final botResponse = response.text ?? "No se recibió respuesta";
 
         setState(() {
-          _messages.removeLast();
+          _isBotResponding = false;
           _messages.add(ChatMessage(text: botResponse, isUser: false));
         });
 
-        _saveMessages(); // Guardar los mensajes después de cada respuesta
+        _saveMessages();
         await _speak(botResponse);
       } catch (e) {
         setState(() {
-          _messages.removeLast();
+          _isBotResponding = false;
           _messages.add(ChatMessage(text: "Error: $e", isUser: false));
         });
       }
     }
+  }
+
+  Future<void> _startListening() async {
+    bool available = await _speech.initialize();
+    if (available) {
+      setState(() {
+        _isListening = true;
+      });
+      _speech.listen(onResult: (result) {
+        setState(() {
+          _controller.text = result.recognizedWords;
+        });
+      });
+    }
+  }
+
+  Future<void> _stopListening() async {
+    await _speech.stop();
+    setState(() {
+      _isListening = false;
+    });
   }
 
   Future<void> _speak(String text) async {
@@ -170,6 +187,11 @@ class _ChatBotViewState extends State<ChatBotView> {
               },
             ),
           ),
+          if (_isBotResponding)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: CircularProgressIndicator(),
+            ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
@@ -189,6 +211,11 @@ class _ChatBotViewState extends State<ChatBotView> {
                   ),
                 ),
                 IconButton(
+                  icon: Icon(Icons.mic),
+                  color: Colors.red,
+                  onPressed: _isListening ? _stopListening : _startListening,
+                ),
+                IconButton(
                   icon: const Icon(Icons.send),
                   color: const Color(0xFF34A853),
                   iconSize: 32,
@@ -196,34 +223,6 @@ class _ChatBotViewState extends State<ChatBotView> {
                 ),
               ],
             ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                onPressed: () => _changeLanguage("en-US"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal[600],
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                child: Text("Inglés (EE.UU.)"),
-              ),
-              SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () => _changeLanguage("es-MX"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal[600],
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                child: Text("Español (México)"),
-              ),
-            ],
           ),
         ],
       ),
@@ -251,7 +250,7 @@ class ChatBubble extends StatelessWidget {
         mainAxisAlignment: message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!message.isUser)
-            const CircleAvatar(
+            CircleAvatar(
               backgroundImage: AssetImage('assets/images/imgsinfondo.jpg'),
               radius: 25,
             ),
@@ -262,24 +261,16 @@ class ChatBubble extends StatelessWidget {
               decoration: BoxDecoration(
                 color: message.isUser ? Colors.blue[300] : Colors.teal[600],
                 borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 6,
-                    offset: Offset(0, 2),
-                  ),
-                ],
               ),
               child: Text(
                 message.text,
                 style: const TextStyle(color: Colors.white, fontSize: 16),
-                softWrap: true,
-                overflow: TextOverflow.clip,
               ),
             ),
           ),
           if (message.isUser)
-            const CircleAvatar(
+            CircleAvatar(
+              child: Icon(Icons.person),
               radius: 25,
             ),
         ],

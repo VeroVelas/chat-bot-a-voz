@@ -13,6 +13,7 @@ dependencies:
   url_launcher: ^6.3.0  # Ya existente
   http: ^1.2.2  # Ya existente
   cupertino_icons: ^1.0.6  # Ya existente
+  speech_to_text: ^7.0.0        # Reconocimiento de voz
   permission_handler: ^10.0.0  # Ya existente
 
   # Nuevas dependencias que necesitas agregar
