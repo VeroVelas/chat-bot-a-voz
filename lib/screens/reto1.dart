@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 class Reto1Screen extends StatelessWidget {
   // Función para abrir el enlace del repositorio en el navegador
   void _launchURL() async {
-    final Uri url = Uri.parse('https://github.com/VeroVelas/chat-bot-a-voz.gitt'); // Cambia este URL por el de tu repositorio
+    final Uri url = Uri.parse('https://github.com/VeroVelas/chat-bot-a-voz.git'); // Cambia este URL por el de tu repositorio
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
